@@ -48,11 +48,31 @@ export class TemperatureConverterComponent implements OnInit, OnDestroy {
         }else {
           this.converterForm.get('fahrenheit')!.setValue(null, { emitEvent: false });
         }
-    }))
+      })
+    );
+
+    // suscripción a los cambios del campo fahrenheit
+    const fahrenheitChanges$ = this.converterForm.get('fahrenheit')!.valueChanges.pipe( 
+      debounceTime(200),
+      distinctUntilChanged()
+    );
+
+    this.subscriptions.add(
+      fahrenheitChanges$.subscribe( value => {
+        if(this.isValidNumber(value)) {
+          const fahrenheit = parseFloat(value);
+          const celsius = (fahrenheit - 32) * 5/9;
+          // actualizo el valor del campo celsius en el formulario sin emitir un evento
+          this.converterForm.get('celsius')!.setValue(celsius.toFixed(2), { emitEvent: false });
+        }else {
+          this.converterForm.get('celsius')!.setValue(null, { emitEvent: false });
+        }
+      })
+    );
 
   }
 
-  isValidNumber(value: any): boolean {
+  private isValidNumber(value: any): boolean {
     return value !== null && value !== '' && !isNaN(parseFloat(value)) && isFinite(value);
   }
 
